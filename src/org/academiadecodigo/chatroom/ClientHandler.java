@@ -17,10 +17,14 @@ public class ClientHandler implements Runnable {
     private DataOutputStream out;
     private BufferedReader in;
     private String clientName;
+    private int id;
+    private boolean connected;
 
-    ClientHandler(Socket clientSocket, Server server) {
+    ClientHandler(Socket clientSocket, Server server, int id) {
         this.server = server;
         this.clientSocket = clientSocket;
+        this.id = id;
+        this.connected = true;
     }
 
     @Override
@@ -40,12 +44,24 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         }
 
-        while (true) {
+        while (connected) {
             try {
-                server.broadcast(clientName + ": " + in.readLine());
+                String message = in.readLine();
+                message = checkMessage(message);
+                server.broadcast(clientName + message, id);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        closeClient();
+    }
+
+    public void closeClient(){
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -57,5 +73,19 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public int getId(){
+        return this.id;
+    }
+
+    public String checkMessage(String message){
+
+        if(message.equals(".quit")){
+            connected = false;
+            return " disconnected";
+        }
+
+        return ": " + message;
     }
 }

@@ -1,9 +1,6 @@
 package org.academiadecodigo.chatroom;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -15,10 +12,8 @@ public class Server {
 
     private ServerSocket server;
     private Socket clientSocket;
-    private DataOutputStream out;
-    private BufferedReader in;
-    String message;
     LinkedList<ClientHandler> clients = new LinkedList<>();
+    private int id = 0;
 
     //in and out streams
 
@@ -33,14 +28,15 @@ public class Server {
             System.out.println("\nServer online");
 
             while (true) {
-
+                id++;
                 clientSocket = server.accept();
                 System.out.println("Connecting client");
-                ClientHandler handler = new ClientHandler(clientSocket, this);
+                ClientHandler handler = new ClientHandler(clientSocket, this, id);
                 Thread thread = new Thread(handler);
                 thread.start();
 
                 clients.add(handler);
+
 
                 //add client to client array in order to broadcast
             }
@@ -49,11 +45,13 @@ public class Server {
         }
     }
 
-    public void broadcast(String message){
+    public void broadcast(String message, int id){
 
         System.out.println(message);
 
         for (ClientHandler currentClient: clients) {
+            if(currentClient.getId() == id)
+                continue;
             currentClient.sendMessage(message + "\n");
         }
     }
